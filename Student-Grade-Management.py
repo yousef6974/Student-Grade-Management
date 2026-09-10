@@ -11,11 +11,23 @@ def StudentScore():
     if score < 0:
         print("Please enter a valid number.")
         grade = "Invalid"
-    elif score >= 50:
-        grade = "Pass"
-    else:
-        grade = "Fail"
-
+    elif score < 50 :
+        grade = "F"
+    elif 50 <= score < 60:
+        grade = "D"
+    elif 60 <= score < 70:
+        grade = "C"
+    elif 70 <= score < 80:
+        grade = "C+"
+    elif 80 <= score < 85:
+        grade = "B"
+    elif 85 <= score < 90:
+        grade = "B+"
+    elif 90 <= score < 95:
+        grade = "A"
+    elif 95 <= score <= 100:
+        grade = "A+"
+        
     return score, grade
 
 

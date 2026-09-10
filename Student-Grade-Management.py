@@ -8,10 +8,10 @@ def StudentScore():
     print("Enter the score:")
     score = int(input())
 
-    if score < 0:
-        print("Please enter a valid number.")
+    if  score < 0 or score > 100:
+        print("Please enter a valid number between 0 and 100.")
         grade = "Invalid"
-    elif score < 50 :
+    elif 0 == score < 50 :
         grade = "F"
     elif 50 <= score < 60:
         grade = "D"

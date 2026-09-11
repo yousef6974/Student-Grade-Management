@@ -13,6 +13,7 @@ A simple Python project for managing student grades.
 ## Technologies
 
 - Python
+- PySide6 (Qt) 
 
 ## How to Run
 

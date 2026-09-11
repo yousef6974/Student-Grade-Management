@@ -1,271 +1,241 @@
 import sys
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QTextEdit, QMessageBox
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QMessageBox,
+    QHeaderView
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QColor
-from PySide6.QtCore import QSize
 
 
-class StudentGradeApp(QMainWindow):
+class StudentGradeManagementSystem(QMainWindow):
+
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.students_data = []
 
     def initUI(self):
-        """Initialize the user interface"""
         self.setWindowTitle("Student Grade Management System")
         self.setGeometry(100, 100, 600, 700)
         self.setStyleSheet(self.get_stylesheet())
 
-        # Main widget and layout
+        # Main Widget
         main_widget = QWidget()
+        main_widget.setObjectName("main_widget")
         main_layout = QVBoxLayout()
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
         # Title
         title_label = QLabel("Student Grade Management System")
-        title_font = QFont()
-        title_font.setPointSize(16)
-        title_font.setBold(True)
-        title_label.setFont(title_font)
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_label.setObjectName("title_label")
         main_layout.addWidget(title_label)
 
-        # Student Name Input
-        name_layout = QHBoxLayout()
-        name_label = QLabel("Student Name:")
-        name_label.setMinimumWidth(100)
-        self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Enter student name")
-        name_layout.addWidget(name_label)
-        name_layout.addWidget(self.name_input)
-        main_layout.addLayout(name_layout)
-
-        # Score Input
-        score_layout = QHBoxLayout()
-        score_label = QLabel("Score (0-100):")
-        score_label.setMinimumWidth(100)
-        self.score_input = QLineEdit()
-        self.score_input.setPlaceholderText("Enter score")
-        score_layout.addWidget(score_label)
-        score_layout.addWidget(self.score_input)
-        main_layout.addLayout(score_layout)
-
-        # Button Layout
-        button_layout = QHBoxLayout()
-        
-        self.add_button = QPushButton("Add Student")
-        self.add_button.clicked.connect(self.add_student)
-        self.add_button.setMinimumHeight(40)
-        
-        self.clear_button = QPushButton("Clear")
-        self.clear_button.clicked.connect(self.clear_inputs)
-        self.clear_button.setMinimumHeight(40)
-        
-        button_layout.addWidget(self.add_button)
-        button_layout.addWidget(self.clear_button)
-        main_layout.addLayout(button_layout)
-
-        # Results Display
-        results_label = QLabel("Results:")
-        results_font = QFont()
-        results_font.setBold(True)
-        results_label.setFont(results_font)
+        # Table Subtitle
+        results_label = QLabel("Grades Sheet:")
+        results_label.setObjectName("results_label")
         main_layout.addWidget(results_label)
 
-        self.results_display = QTextEdit()
-        self.results_display.setReadOnly(True)
-        self.results_display.setMinimumHeight(300)
+        # Excel Table Widget
+        self.results_display = QTableWidget()
+        self.results_display.setObjectName("results_display")
+        self.results_display.setColumnCount(3)
+        self.results_display.setHorizontalHeaderLabels(["Name", "Score", "Grade"])
+        
+        # Stretch columns to automatically fit the window width
+        self.results_display.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        
+       # Set up initial rows and connect cell change listener
+        self.results_display.setRowCount(10)
+        self.results_display.cellChanged.connect(self.on_cell_changed)
+
         main_layout.addWidget(self.results_display)
 
-        # Summary Layout
+        # Summary Buttons Layout
         summary_layout = QHBoxLayout()
-        
+        summary_layout.setObjectName("summary_layout")
+
         self.export_button = QPushButton("Export Results")
+        self.export_button.setObjectName("export_button")
         self.export_button.clicked.connect(self.export_results)
-        self.export_button.setMinimumHeight(40)
-        
+
         self.reset_button = QPushButton("Reset All")
+        self.reset_button.setObjectName("reset_button")
         self.reset_button.clicked.connect(self.reset_all)
-        self.reset_button.setMinimumHeight(40)
-        
+
         summary_layout.addWidget(self.export_button)
         summary_layout.addWidget(self.reset_button)
         main_layout.addLayout(summary_layout)
 
     def get_stylesheet(self):
-        """Return custom stylesheet for the application"""
         return """
-            QMainWindow {
-                background-color: #f0f0f0;
-            }
-            QLabel {
-                color: #333;
-                font-size: 11px;
-            }
-            QLineEdit {
-                padding: 8px;
-                border: 2px solid #ddd;
-                border-radius: 4px;
-                background-color: white;
-                selection-background-color: #0d47a1;
-            }
-            QLineEdit:focus {
-                border: 2px solid #0d47a1;
-            }
-            QPushButton {
-                background-color: #0d47a1;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 10px;
-                font-weight: bold;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #1565c0;
-            }
-            QPushButton:pressed {
-                background-color: #0d47a1;
-            }
-            QTextEdit {
-                background-color: white;
-                border: 2px solid #ddd;
-                border-radius: 4px;
-                padding: 10px;
-                font-family: Courier;
-                font-size: 10px;
-            }
+        QMainWindow {
+            background-color: #f5f5f5;
+        }
+        QLabel#title_label {
+            qproperty-alignment: 'AlignCenter';
+            padding: 15px 0px;
+            font-weight: bold;
+            font-size: 24px;
+            color: #gray;
+        }
+        QLabel#results_label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333333;
+            padding-top: 10px;
+        }
+        QTableWidget {
+            background-color: #ffffff;
+            gridline-color: #d0d0d0;
+            border: 1px solid #ababab;
+            font-size: 14px;
+            color: #333333;
+        }
+        QHeaderView::section {
+            background-color: #f3f3f3;
+            padding: 8px;
+            border: 1px solid #d0d0d0;
+            font-weight: bold;
+            font-size: 13px;
+            color: #444444;
+        }
+        QTableWidget::item {
+            padding: 1px;
+        }
+        QTableWidget::item:selected {
+            background-color: #e2f0d9;
+            color: #000000;
+        }
+        QPushButton {
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            border: 1px solid #ababab;
+            background-color: #ffffff;
+        }
+        QPushButton:hover {
+            background-color: #f0f0f0;
+        }
+        QPushButton#export_button {
+            background-color: #107c41;
+            color: white;
+            border: 1px solid #0e6c38;
+        }
+        QPushButton#export_button:hover {
+            background-color: #0e6c38;
+        }
+        QPushButton#reset_button {
+            background-color: #d9534f;
+            color: white;
+            border: 1px solid #d43f3a;
+        }
+        QPushButton#reset_button:hover {
+            background-color: #c9302c;
+        }
         """
 
     def calculate_grade(self, score):
-        """Calculate grade based on score"""
         try:
-            score = int(score)
-            
+            score = float(score)
             if score < 0 or score > 100:
                 return None, "Invalid"
-            elif 0 <= score < 50:
-                return score, "F"
-            elif 50 <= score < 60:
-                return score, "D"
-            elif 60 <= score < 70:
-                return score, "C"
-            elif 70 <= score < 80:
-                return score, "C+"
-            elif 80 <= score < 85:
-                return score, "B"
-            elif 85 <= score < 90:
-                return score, "B+"
-            elif 90 <= score < 95:
-                return score, "A"
-            elif 95 <= score <= 100:
-                return score, "A+"
+            elif 0 <= score < 50: return score, "F"
+            elif 50 <= score < 60: return score, "D"
+            elif 60 <= score < 70: return score, "C"
+            elif 70 <= score < 80: return score, "C+"
+            elif 80 <= score < 85: return score, "B"
+            elif 85 <= score < 90: return score, "B+"
+            elif 90 <= score < 95: return score, "A"
+            elif 95 <= score <= 100: return score, "A+"
         except ValueError:
             return None, "Invalid"
 
-    def add_student(self):
-        """Add a new student and display results"""
-        name = self.name_input.text().strip()
-        score_text = self.score_input.text().strip()
+    def on_cell_changed(self, row, column):
+       # Auto-extend table: add a new row when the last row is modified
+        if row == self.results_display.rowCount() - 1:
+            self.results_display.blockSignals(True)
+            self.results_display.insertRow(self.results_display.rowCount())
+            self.results_display.blockSignals(False)
 
-        # Validation
-        if not name:
-            QMessageBox.warning(self, "Input Error", "Please enter a student name.")
-            return
-
-        if not score_text:
-            QMessageBox.warning(self, "Input Error", "Please enter a score.")
-            return
-
-        score, grade = self.calculate_grade(score_text)
-
-        if grade == "Invalid":
-            QMessageBox.warning(
-                self, 
-                "Invalid Score", 
-                "Please enter a valid number between 0 and 100."
-            )
-            return
-
-        # Add to data and display
-        self.students_data.append({"name": name, "score": score, "grade": grade})
-        self.update_results_display()
-        self.clear_inputs()
-
-    def update_results_display(self):
-        """Update the results display area"""
-        results_text = "Name\t\tScore\tGrade\n"
-        results_text += "-" * 40 + "\n"
-
-        for student in self.students_data:
-            results_text += f"{student['name']:<20}\t{student['score']}\t{student['grade']}\n"
-
-        if self.students_data:
-            results_text += "-" * 40 + "\n"
-            avg_score = sum(s['score'] for s in self.students_data) / len(self.students_data)
-            results_text += f"Average Score: {avg_score:.2f}\n"
-            results_text += f"Total Students: {len(self.students_data)}"
-
-        self.results_display.setText(results_text)
-
-    def clear_inputs(self):
-        """Clear input fields"""
-        self.name_input.clear()
-        self.score_input.clear()
-        self.name_input.setFocus()
+        # Auto-calculate grade upon updating the score column
+        if column == 1:
+            self.results_display.blockSignals(True)
+            score_item = self.results_display.item(row, column)
+            
+            if score_item and score_item.text().strip():
+                score_text = score_item.text().strip()
+                score, grade = self.calculate_grade(score_text)
+                
+                if grade != "Invalid":
+                    grade_item = QTableWidgetItem(grade)
+                    # Prevent the user from manually editing the grade cell
+                    grade_item.setFlags(grade_item.flags() & ~Qt.ItemIsEditable)
+                    self.results_display.setItem(row, 2, grade_item)
+                else:
+                    self.results_display.setItem(row, 2, QTableWidgetItem(""))
+            else:
+                self.results_display.setItem(row, 2, QTableWidgetItem(""))
+                
+            self.results_display.blockSignals(False)
 
     def reset_all(self):
-        """Reset all data"""
         reply = QMessageBox.question(
-            self,
-            "Confirm Reset",
-            "Are you sure you want to reset all data?",
+            self, "Confirm Reset", "Are you sure you want to reset all data?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
-        
         if reply == QMessageBox.StandardButton.Yes:
-            self.students_data = []
-            self.results_display.clear()
-            self.clear_inputs()
+            self.results_display.blockSignals(True)
+           # Clear row count to prevent removing headers, then re-initialize with 10 blank rows 
+            self.results_display.setRowCount(0)
+            self.results_display.setRowCount(10)
+            self.results_display.blockSignals(False)
 
     def export_results(self):
-        """Export results to a text file"""
-        if not self.students_data:
+        # Pull data directly from table cells for export
+        valid_students = []
+        for row in range(self.results_display.rowCount()):
+            name_item = self.results_display.item(row, 0)
+            score_item = self.results_display.item(row, 1)
+            grade_item = self.results_display.item(row, 2)
+            
+            name = name_item.text().strip() if name_item else ""
+            score = score_item.text().strip() if score_item else ""
+            grade = grade_item.text().strip() if grade_item else ""
+            
+            if name or score:  # Process only the rows populated by the user
+                valid_students.append({"name": name, "score": score, "grade": grade})
+
+        if not valid_students:
             QMessageBox.warning(self, "No Data", "No student data to export.")
             return
 
         try:
-            with open("student_grades.txt", "w") as file:
+            with open("student_grades.txt", "w", encoding="utf-8") as file:
                 file.write("Student Grade Management System - Results\n")
                 file.write("=" * 50 + "\n\n")
-                file.write("Name\t\tScore\tGrade\n")
+                file.write(f"{'Name':<20}\t{'Score':<10}\t{'Grade':<10}\n")
                 file.write("-" * 50 + "\n")
-
-                for student in self.students_data:
-                    file.write(f"{student['name']:<20}\t{student['score']}\t{student['grade']}\n")
-
-                file.write("-" * 50 + "\n")
-                avg_score = sum(s['score'] for s in self.students_data) / len(self.students_data)
-                file.write(f"\nAverage Score: {avg_score:.2f}\n")
-                file.write(f"Total Students: {len(self.students_data)}\n")
-
-            QMessageBox.information(
-                self,
-                "Export Successful",
-                "Results exported to 'student_grades.txt'"
-            )
+                
+                for student in valid_students:
+                    file.write(f"{student['name']:<20}\t{student['score']:<10}\t{student['grade']:<10}\n")
+                    
+            QMessageBox.information(self, "Success", "Results exported successfully to 'student_grades.txt'!")
         except Exception as e:
-            QMessageBox.critical(self, "Export Error", f"Error exporting results: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to export data: {str(e)}")
 
 
 def main():
     app = QApplication(sys.argv)
-    window = StudentGradeApp()
+    window = StudentGradeManagementSystem()
     window.show()
     sys.exit(app.exec())
 

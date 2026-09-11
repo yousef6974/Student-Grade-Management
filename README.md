@@ -8,7 +8,7 @@ A simple Python project for managing student grades.
 - Enter student scores
 - Check Pass or Fail
 - Validate scores
-- Display student results
+- Display student results with a table like excel
 
 ## Technologies
 
